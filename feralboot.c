@@ -9,17 +9,24 @@
 	Just because we *really* like a black and yellow color combination for whatever reason (it just feels cool and is unique???), when we do have a menu, ensure highlights are yellow, text in a 
 	decent kinda mid grey (selected as white), and everything some tone of black or something.
 	Maybe use red somewhere for variation too? I'm not a UX designer so I don't know how well that would go out. Can just change later.
-	We'd like to ____really____ avoid white wherever possible. White should be reserved for text.
+	We'd like to ____really____ avoid white wherever possible. White should be reserved for text. Maybe for important stuff..? We want black + yellow (and a litle red) on everything.
+
+	Maybe we can pick up on that convergence dream of having one application run on a million different architectures and look 'native' on all of them?
+	(Particularly with phone & PC, a game that runs on your PC should also be able to run on your phone, be it streaming, or massive performance hit with an emulator/JIT recompiler)
+	Loootttss of work (especially since I'm the only one working on this), but hey, shoot a rocket at Andromeda and it will *eventually* get there.
  */
 
 #include <efi.h>
 #include <efilib.h>
+#define E_IDENTC 16
 
+
+//Global variables
 EFI_SYSTEM_TABLE* SysTable;
 EFI_BOOT_SERVICES* BootServices;
 EFI_RUNTIME_SERVICES* RuntimeServices;
 
-#define E_IDENTC 16
+
 
 enum FeralBootStatus
 {
@@ -52,7 +59,14 @@ EFI_STATUS efialloc(uintn_t size, VOID** ptr)
 }
 
 
-//free() still works on EFI alloced stuff.
+EFI_STATUS efimemalloc(void)
+{
+	//TODO...
+	//Strictly contiguous memory (in hardware), need so we can just point at kernel_main, shutdown BootServices, and jump.
+}
+
+
+//free() still works on EFI malloced stuff.
 void free(void* pointer)
 {
 	uefi_call_wrapper(BootServices->FreePool, 1, pointer);	//EFI does it for us.
@@ -126,7 +140,7 @@ enum ElfType
 
 
 
-
+#if 0
 //TODO: make all of this not garbage!
 struct Kernel
 {
@@ -161,6 +175,11 @@ struct Configuration
 	int position;
 }Configuration;
 //TODO
+
+
+//This stuff isn't necessary. Cut it out.
+
+#endif
 
 
 /**
@@ -214,6 +233,7 @@ enum FeralBootStatus CheckElfFile(struct ElfHeader* hdr)
 		return FERALBOOT_INVALID_ARCHITECTURE;
 		//Wrong architecture!
 		//Wishlist: emulator as raw EFI application and continue to run ELF kernel __ANYWAY__ on a virtual machine.
+		//We'd do this through a JIT compiler, just like Redmond's WoW (ARM32 imitating 32-bit x86) does.
 	}
 	
 	//TODO: rest of checks...
@@ -252,12 +272,11 @@ EFI_STATUS ClrScr(void)
 
 
 
-
-
-#if defined(__x86_64) || defined(__x86) 
 CHAR8 cpu_vendor[12];
 CHAR8 cpu_brand_name[48];
+//ARCHITECTURE SPECIFIC STUFF!!!!!
 
+#if defined(__x86_64) || defined(__x86) 
 UINT32 registers_cache[4];
 char items[4];
 
@@ -278,25 +297,6 @@ static char* read_register_cache(int position)
 	} 
 	return (items);
 }
-
-/*
-static volatile void ReadCpuid(UINT32 info, UINT32* r1, UINT32* r2, UINT32* r3, UINT32* r4)
-{
-	*r1 = info;
-	__asm volatile(
-	".intel_syntax;\n"
-	"mov %%eax, %[ri_];\n"
-	"cpuid;\n"
-	"mov %[r0_], %%eax;\n"
-	"mov %[r1_], %%ebx;\n"
-	"mov %[r2_], %%ecx;\n"
-	"mov %[r3_], %%edx;\n"
-	".att_syntax;"
-	:[ri_]"=r"(*r1), [ri1_]"=r"(*r2), [ri2_]"=r"(*r3), [ri3_]"=r"(*r4)
-	:[r0_]"r"(*r1),  [r1_]"r"(*r2),   [r2_]"r"(*r4),  [r3_]"r"(*r4)
-	: 
-	);
-}*/
 
 static volatile void SetupCpuVendor(void)
 {
@@ -343,9 +343,63 @@ static volatile void SetupCpuBrandName(void)
 		}
 	}
 }
+
+/*
+static volatile void ReadCpuid(UINT32 info, UINT32* r1, UINT32* r2, UINT32* r3, UINT32* r4)
+{
+	*r1 = info;
+	__asm volatile(
+	".intel_syntax;\n"
+	"mov %%eax, %[ri_];\n"
+	"cpuid;\n"
+	"mov %[r0_], %%eax;\n"
+	"mov %[r1_], %%ebx;\n"
+	"mov %[r2_], %%ecx;\n"
+	"mov %[r3_], %%edx;\n"
+	".att_syntax;"
+	:[ri_]"=r"(*r1), [ri1_]"=r"(*r2), [ri2_]"=r"(*r3), [ri3_]"=r"(*r4)
+	:[r0_]"r"(*r1),  [r1_]"r"(*r2),   [r2_]"r"(*r4),  [r3_]"r"(*r4)
+	: 
+	);
+}*/
 #endif
 
-//TODO: CPUID for ARM...
+
+//TODO: CPUID for ARM... Performance doesn't matter. Implement with brute force assembly if necessary to act the same as x86.
+//(If this feature doesn't exist, simply state "Unknown AArch64 chip" or "Unknown ARM32 chip"
+//We don't really do "ARM desktop" or anything like that. ARM support is intended mainly for smartphones.
+#if defined(__aarch64__)
+
+static volatile void SetupCpuVendor(void)
+{
+	//TODO: AArch64 port
+	return;
+}
+
+static volatile void SetupCpuBrandName(void)
+{
+	//TODO: AArch64 port, need to learn ARM32/AArch64 assembly.
+	return;
+}
+#endif
+
+#if defined(__arm__)
+
+static volatile void SetupCpuVendor(void)
+{
+	//TODO: ARM32 port
+	return;
+}
+
+static volatile void SetupCpuBrandName(void)
+{
+	//TODO: ARM32 port, need to learn ARM32/AArch64 assembly.
+	return;
+}
+
+#endif
+
+
 
 
 
@@ -382,6 +436,22 @@ EFI_STATUS efi_init_filesystems(void)
 	return status;
 }
 
+int got_architecture;	//Architecture LoadKernel finds in ELF header.
+
+void* LoadKernel(EFI_HANDLE file)
+{
+	//We'll need to mmap things to get this just right.
+	
+
+	//First, we load the file...
+	
+	struct ElfHeader* header;
+	enum ElfType type;
+	struct ElfProgramHeader** prog_header;
+	struct ElfSectionHeader** sect_header;
+
+	//TODO...
+}
 
 
 
@@ -399,10 +469,9 @@ EFI_STATUS EFIAPI efi_main(EFI_HANDLE img_hdl, EFI_SYSTEM_TABLE* system_table)
 	RuntimeServices = SysTable->RuntimeServices;
 	
 	ClrScr();
-	Print(L"UEFI Version:           %d.%02d\n", SysTable->Hdr.Revision >> 16, SysTable->Hdr.Revision & 0xFFFF);
-	
 	Print(L"Initializing FeralBoot...\n");
 	Print(L"Wanted architecture:    %u\n", get_wanted_arch());
+	Print(L"UEFI Version:           %d.%02d\n", SysTable->Hdr.Revision >> 16, SysTable->Hdr.Revision & 0xFFFF);
 	
 
 
@@ -425,6 +494,9 @@ EFI_STATUS EFIAPI efi_main(EFI_HANDLE img_hdl, EFI_SYSTEM_TABLE* system_table)
 	Print(L"\n");
 	
 	//TODO, check for 'floskrnl.pro' in the ESP. If not there, check subfolders and present options menu.
+
+	//Put in filesystem initialization and look for floskrnl.pro directly in ESP.
+
 	Print(L"Preparing boot...");
 	//TODO: Switch to nice menu, clear screen, and load up the actual boot menu we want.
 

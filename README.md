@@ -21,7 +21,19 @@ TODOS:
 	
 	- Support running ELF executables as kernels, ala GNU GRUB.
 	
-	- Get it to boot a hypothetical Feral kernel (get that Hello World K8 kernel out of the ground!!!)
+	- Get it to boot a hypothetical Feral kernel
+___
+
+COMPLETED:
+	
+	- Identify CPU vendor and brand
+	
+	- Helper functions
+
+	- Identify UEFI vendor and version
+
+	- Essentially nothing
+
 ___
 
 I'm trying to rush this, so we can get to kernel programming (the fun part!)
@@ -36,3 +48,6 @@ ___
 FeralBoot (it's own sources) is distributed under the terms of the MIT license. See 'LICENSE' for details.
 FeralBoot requires external software (gnu-efi) however, which is distributed under the terms of the BSD 3-clause license.
 See 'LICENSE_THIRDPARTY' for details on that code. That file should be distributed with binary releases, for legal reasons.
+(Need to go through and grep through all the files in gnu-efi, so probably more than that is needed.)
+
+I'll end up replacing GNU-EFI with a clang-oriented alternative sometime.
